@@ -16,7 +16,6 @@ import {
 // Component specific libraries.
 import _ from 'lodash';
 import Moment from 'moment';
-import ReversedFlatList from 'react-native-reversed-flat-list';
 import { isTablet } from 'react-native-device-info';
 
 const thisdata = [];
@@ -43,7 +42,7 @@ type State = {
 
 const initYear = 1900;
 const currentYear = Number((new Date()).getFullYear());
-const years = Array(currentYear - initYear + 3).fill().map((v, i) => i + 1);
+const years = Array(currentYear - initYear + 3).fill().map((v, i) => i + 1).reverse();
 const is_pad = isTablet();
 // var defaultyear = Moment().year('YYYY');
 
@@ -109,7 +108,8 @@ export default class YearSelector extends Component {
         <Text style={[styles.yearText, this.props.yearText]}>
           {this.state.year}
         </Text> */}
-        <ReversedFlatList
+        <FlatList
+          inverted
           showsVerticalScrollIndicator={false}
           style={{ marginTop: 5, maxHeight: 270 }}
           data={years}
