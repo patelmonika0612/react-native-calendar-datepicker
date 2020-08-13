@@ -3,8 +3,7 @@
 * @flow
 */
 
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
 import {
   Dimensions,
   PanResponder,
@@ -14,7 +13,6 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
-import ViewPropTypes from '../util/ViewPropTypes';
 
 // Component specific libraries.
 import _ from 'lodash';
@@ -32,11 +30,11 @@ type Props = {
   minDate: Moment,
   maxDate: Moment,
   // Styling properties.
-  dayHeaderView?: ViewPropTypes.style,
+  dayHeaderView?: View.propTypes.style,
   dayHeaderText?: Text.propTypes.style,
-  dayRowView?: ViewPropTypes.style,
-  dayView?: ViewPropTypes.style,
-  daySelectedView?: ViewPropTypes.style,
+  dayRowView?: View.propTypes.style,
+  dayView?: View.propTypes.style,
+  daySelectedView?: View.propTypes.style,
   dayText?: Text.propTypes.style,
   dayTodayText?: Text.propTypes.style,
   daySelectedText?: Text.propTypes.style,
@@ -45,6 +43,8 @@ type Props = {
 type State = {
   days: Array<Array<Object>>,
 };
+
+const week_days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 export default class DaySelector extends Component {
   props: Props;
@@ -59,7 +59,7 @@ export default class DaySelector extends Component {
     }
   }
 
-  _slide = (dx : number) => {
+  _slide = (dx: number) => {
     this.refs.wrapper.setNativeProps({
       style: {
         left: dx,
@@ -77,7 +77,7 @@ export default class DaySelector extends Component {
         return Math.abs(gestureState.dx) > 5;
       },
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
-          return Math.abs(gestureState.dx) > 5;
+        return Math.abs(gestureState.dx) > 5;
       },
       onPanResponderMove: (evt, gestureState) => {
         this._slide(gestureState.dx);
@@ -88,7 +88,7 @@ export default class DaySelector extends Component {
         // responder. This typically means a gesture has succeeded
 
         // Get the height, width and compute the threshold and offset for swipe.
-        const {height, width} = Dimensions.get('window');
+        const { height, width } = Dimensions.get('window');
         const threshold = this.props.slideThreshold || _.min([width / 3, 250]);
         const maxOffset = _.max([height, width]);
         const dx = gestureState.dx;
@@ -141,7 +141,7 @@ export default class DaySelector extends Component {
 
   componentWillReceiveProps(nextProps: Object) {
     if (this.props.focus != nextProps.focus ||
-        this.props.selected != nextProps.selected) {
+      this.props.selected != nextProps.selected) {
       this.setState({
         days: this._computeDays(nextProps),
       })
@@ -153,7 +153,7 @@ export default class DaySelector extends Component {
     }
   }
 
-  _computeDays = (props: Object) : Array<Array<Object>> => {
+  _computeDays = (props: Object): Array<Array<Object>> => {
     let result = [];
     const currentMonth = props.focus.month();
     let iterator = Moment(props.focus);
@@ -164,7 +164,7 @@ export default class DaySelector extends Component {
       let week = result[result.length - 1];
       week[iterator.weekday()] = {
         valid: this.props.maxDate.diff(iterator, 'seconds') >= 0 &&
-               this.props.minDate.diff(iterator, 'seconds') <= 0,
+          this.props.minDate.diff(iterator, 'seconds') <= 0,
         date: iterator.date(),
         selected: props.selected && iterator.isSame(props.selected, 'day'),
         today: iterator.isSame(Moment(), 'day'),
@@ -176,8 +176,8 @@ export default class DaySelector extends Component {
     return result;
   };
 
-  _onChange = (day : Object) : void => {
-    let date = Moment(this.props.focus).add(day.date - 1 , 'day');
+  _onChange = (day: Object): void => {
+    let date = Moment(this.props.focus).add(day.date - 1, 'day');
     this.props.onChange && this.props.onChange(date);
   }
 
@@ -185,43 +185,52 @@ export default class DaySelector extends Component {
     return (
       <View>
         <View style={[styles.headerView, this.props.dayHeaderView]}>
-          {_.map(Moment.weekdaysShort(true), (day) =>
+          {/* {_.map(Moment.weekdaysShort(true, 2), (day) =>
             <Text key={day} style={[styles.headerText, this.props.dayHeaderText]}>
               {day}
             </Text>
-          )}
+          )} */}
+          {week_days.map(day => (
+            <Text key={day} style={[styles.headerText, this.props.dayHeaderText]}>
+              {day}
+            </Text>
+          ))}
         </View>
         <View ref="wrapper" {...this._panResponder.panHandlers}>
           {_.map(this.state.days, (week, i) =>
             <View key={i} style={[
-                styles.rowView,
-                this.props.dayRowView,
-                i === this.state.days.length - 1 ? {
-                  borderBottomWidth: 0,
-                } : null,
-              ]}>
+              styles.rowView,
+              this.props.dayRowView,
+              i === this.state.days.length - 1 ? {
+                borderBottomWidth: 0,
+              } : null,
+            ]}>
               {_.map(week, (day, j) =>
                 <TouchableHighlight
                   key={j}
                   style={[
-                    styles.dayView,
+                    day.selected ? null : styles.dayView,
                     this.props.dayView,
-                    day.selected ? this.props.daySelectedView : null
+                    // day.selected ? this.props.daySelectedView : null
                   ]}
                   activeOpacity={day.valid ? 0.8 : 1}
                   underlayColor='transparent'
                   onPress={() => day.valid && this._onChange(day)}>
-                  <Text style={[
-                    styles.dayText,
-                    this.props.dayText,
-                    day.today ? this.props.dayTodayText : null,
-                    day.selected ? styles.selectedText : null,
-                    day.selected ? this.props.daySelectedText : null,
-                    day.valid ? null : styles.disabledText,
-                    day.valid ? null : this.props.dayDisabledText,
-                  ]}>
-                    {day.date}
-                  </Text>
+                  <View
+                    style={day.selected ? this.props.daySelectedView : null}>
+                    <Text style={[
+                      styles.dayText,
+                      this.props.dayText,
+                      day.today ? this.props.dayTodayText : null,
+                      day.selected ? styles.selectedText : null,
+                      day.selected ? this.props.daySelectedText : null,
+                      day.valid ? null : styles.disabledText,
+                      day.valid ? null : this.props.dayDisabledText,
+                      // day.selected ? this.props.daySelectedView : null
+                    ]}>
+                      {day.date}
+                    </Text>
+                  </View>
                 </TouchableHighlight>
               )}
             </View>
@@ -258,12 +267,14 @@ const styles = StyleSheet.create({
     height: 35,
   },
   dayView: {
-    flexGrow: 1,
+    // flexGrow: 1,
+    flex: 1,
     margin: 5,
   },
   dayText: {
     flexGrow: 1,
     minWidth: 30,
+    // width: 30,
     padding: 5,
     textAlign: 'center',
   },

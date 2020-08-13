@@ -3,8 +3,7 @@
 * @flow
 */
 
-import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
 import {
   LayoutAnimation,
   TouchableHighlight,
@@ -12,7 +11,6 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
-import ViewPropTypes from '../util/ViewPropTypes';
 
 // Component specific libraries.
 import _ from 'lodash';
@@ -21,7 +19,7 @@ import Moment from 'moment';
 type Props = {
   selected?: Moment,
   // Styling
-  style?: ViewPropTypes.style,
+  style?: View.propTypes.style,
   // Controls the focus of the calendar.
   focus: Moment,
   onFocus?: (date: Moment) => void,
@@ -35,6 +33,7 @@ type Props = {
 };
 type State = {
   months: Array<Array<Object>>,
+  selectedMonth?: number,
 };
 
 export default class MonthSelector extends Component {
@@ -68,6 +67,14 @@ export default class MonthSelector extends Component {
     };
   }
 
+  componentWillReceiveProps(nextProps: Object) {
+    if (this.props.selected != nextProps.selected) {
+      this.setState({
+        selectedMonth: nextProps.selected && nextProps.selected.month(),
+      })
+    }
+  }
+
   _onFocus = (index : number) : void => {
     let focus = Moment(this.props.focus);
     focus.month(index);
@@ -93,7 +100,7 @@ export default class MonthSelector extends Component {
                   this.props.monthText,
                   month.valid ? null : styles.disabledText,
                   month.valid ? null : this.props.monthDisabledText,
-                  month.index ===  (this.props.selected && this.props.selected.month()) ? this.props.selectedText : null,
+                  month.index === this.state.selectedMonth ? this.props.selectedText : null,
                 ]}>
                   {month.name}
                 </Text>
