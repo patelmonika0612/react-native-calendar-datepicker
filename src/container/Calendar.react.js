@@ -22,11 +22,13 @@ import Moment from 'moment';
 import YearSelector from '../pure/YearSelector.react';
 import MonthSelector from '../pure/MonthSelector.react';
 import DaySelector from '../pure/DaySelector.react';
+import Icon from 'react-native-vector-icons/Fontisto';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 type Stage = "day" | "month" | "year";
-const DAY_SELECTOR : Stage = "day";
-const MONTH_SELECTOR : Stage = "month";
-const YEAR_SELECTOR : Stage = "year";
+const DAY_SELECTOR: Stage = "day";
+const MONTH_SELECTOR: Stage = "month";
+const YEAR_SELECTOR: Stage = "year";
 
 // Unicode characters
 const LEFT_CHEVRON = '\u276E';
@@ -71,6 +73,13 @@ type Props = {
   yearMaxTintColor?: string,
   yearSlider?: Slider.propTypes.style,
   yearText?: Text.propTypes.style,
+  yearflatlistText?: Text.propTypes.style,
+  // custome header props
+  headerYear: Moment,
+  headerDay: Moment,
+  is_landscape: Boolean,
+  is_pad: Boolean,
+  yearVisible: String
 };
 type State = {
   stage: Stage,
@@ -87,7 +96,7 @@ export default class Calendar extends Component {
   constructor(props: Props) {
     super(props);
     const stage = String(props.startStage) < String(props.finalStage) ?
-                  props.finalStage : props.startStage;
+      props.finalStage : props.startStage;
     this.state = {
       stage: stage,
       focus: Moment(props.selected).startOf('month'),
@@ -95,7 +104,7 @@ export default class Calendar extends Component {
     }
   }
 
-  _stageText = () : string => {
+  _stageText = (): string => {
     if (this.state.stage === DAY_SELECTOR) {
       return this.state.focus.format('MMMM YYYY');
     } else {
@@ -103,38 +112,38 @@ export default class Calendar extends Component {
     }
   }
 
-  _previousStage = () : void => {
+  _previousStage = (): void => {
     if (this.state.stage === DAY_SELECTOR) {
-      this.setState({stage: MONTH_SELECTOR})
+      this.setState({ stage: MONTH_SELECTOR })
     }
     if (this.state.stage === MONTH_SELECTOR) {
-      this.setState({stage: YEAR_SELECTOR})
+      this.setState({ stage: YEAR_SELECTOR })
     }
     LayoutAnimation.easeInEaseOut();
   };
 
-  _nextStage = () : void => {
+  _nextStage = (): void => {
     if (this.state.stage === MONTH_SELECTOR) {
-      this.setState({stage: DAY_SELECTOR})
+      this.setState({ stage: DAY_SELECTOR })
     }
     if (this.state.stage === YEAR_SELECTOR) {
-      this.setState({stage: MONTH_SELECTOR})
+      this.setState({ stage: MONTH_SELECTOR })
     }
     LayoutAnimation.easeInEaseOut();
   };
 
-  _previousMonth = () : void => {
-    this.setState({monthOffset: -1});
+  _previousMonth = (): void => {
+    this.setState({ monthOffset: -1 });
   };
 
-  _nextMonth = () : void => {
-    this.setState({monthOffset: 1});
+  _nextMonth = (): void => {
+    this.setState({ monthOffset: 1 });
   };
 
-  _changeFocus = (focus : Moment) : void => {
-    this.setState({focus, monthOffset: 0});
+  _changeFocus = (focus: Moment): void => {
+    this.setState({ focus, monthOffset: 0 });
     if (this.props.finalStage != DAY_SELECTOR &&
-        this.state.stage == this.props.finalStage) {
+      this.state.stage == this.props.finalStage) {
       this.props.onChange && this.props.onChange(focus);
     } else {
       this._nextStage();
@@ -153,93 +162,108 @@ export default class Calendar extends Component {
       <View style={[{
         minWidth: 300,
         // Wrapper view default style.
-      },this.props.style]}>
+      }, this.props.style]}>
+        <View style={this.props.is_landscape ? (this.props.is_pad ? styles.padlandscapecustomeHeader : styles.landscapecustomeHeader) : (this.props.is_pad ? styles.padcustomeHeader : styles.customeHeader)}>
+          {/* <Text style={styles.headeryearText}>{Moment().format('YYYY')}</Text>
+          <Text style={styles.headermonthText}>{Moment().format("ddd, MMM D")}</Text> */}
+          <Text style={this.props.is_landscape ? (this.props.is_pad ? styles.padlandscapeheaderyearText : styles.landscapeheaderyearText) : (this.props.is_pad ? styles.padheaderyearText : styles.headeryearText)}>{this.props.headerYear}</Text>
+          <Text style={this.props.is_landscape ? (this.props.is_pad ? styles.padlandscapeheadermonthText : styles.landscapeheadermonthText) : (this.props.is_pad ? styles.padheadermonthText : styles.headermonthText)}>{this.props.headerDay}</Text>
+        </View>
         <View style={{
           flexDirection: 'row',
         }}>
-          <View style={[styles.barView, this.props.barView]}>
-            { this.props.showArrows && this.state.stage === DAY_SELECTOR && previousMonthValid ?
-              <TouchableHighlight
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                underlayColor={barStyle ? barStyle.backgroundColor : 'transparent'}
-                onPress={this._previousMonth}
-              >
-                <Text style={this.props.barText}>{LEFT_CHEVRON}</Text>
-              </TouchableHighlight> : <View/>
-            }
+          {this.state.stage !== this.props.yearVisible ?
+            <View style={[styles.barView, this.props.barView]}>
+              {this.props.showArrows && this.state.stage === DAY_SELECTOR && previousMonthValid ?
+                <TouchableHighlight
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  underlayColor={barStyle ? barStyle.backgroundColor : 'transparent'}
+                  onPress={this._previousMonth}
+                >
+                  <Icon style={styles.searchIcon} name="angle-left" size={this.props.is_landscape ? 8 : this.props.is_pad ? 22 : 12} color="#808080" />
+                  {/* <Text style={this.props.barText}>{LEFT_CHEVRON}</Text> */}
+                </TouchableHighlight> : <View />
+              }
 
-            <TouchableHighlight
-              activeOpacity={this.state.stage !== YEAR_SELECTOR ? 0.8 : 1}
-              underlayColor={barStyle ? barStyle.backgroundColor : 'transparent'}
-              onPress={this._previousStage}
-              style={{ alignSelf: 'center' }}
-            >
-              <Text style={this.props.barText}>
-                {this._stageText()}
-              </Text>
-            </TouchableHighlight>
-
-            { this.props.showArrows && this.state.stage === DAY_SELECTOR && nextMonthValid ?
               <TouchableHighlight
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                activeOpacity={this.state.stage !== YEAR_SELECTOR ? 0.8 : 1}
                 underlayColor={barStyle ? barStyle.backgroundColor : 'transparent'}
-                onPress={this._nextMonth}
+                onPress={this._previousStage}
+                style={{ alignSelf: 'center' }}
               >
-                <Text style={this.props.barText}>{RIGHT_CHEVRON}</Text>
-              </TouchableHighlight> : <View/>
-            }
-          </View>
+                <Text style={this.props.barText}>
+                  {this._stageText()}
+                </Text>
+              </TouchableHighlight>
+
+              {this.props.showArrows && this.state.stage === DAY_SELECTOR && nextMonthValid ?
+                <TouchableHighlight
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  underlayColor={barStyle ? barStyle.backgroundColor : 'transparent'}
+                  onPress={this._nextMonth}
+                >
+                  <Icon style={styles.searchIcon} name="angle-right" size={this.props.is_landscape ? 8 : this.props.is_pad ? 22 : 12} color="#808080" />
+                  {/* <Text style={this.props.barText}>{RIGHT_CHEVRON}</Text> */}
+                </TouchableHighlight> : <View />
+              }
+            </View>
+            :
+            <View style={[styles.barView, { backgroundColor: '#fff', paddingTop: 10 }]}>
+            </View>
+          }
         </View>
         <View
           style={[styles.stageWrapper, this.props.stageView]}>
           {
             this.state.stage === DAY_SELECTOR ?
-            <DaySelector
-              focus={this.state.focus}
-              selected={this.props.selected}
-              onFocus={this._changeFocus}
-              onChange={(date) => this.props.onChange && this.props.onChange(date)}
-              monthOffset={this.state.monthOffset}
-              minDate={this.props.minDate}
-              maxDate={this.props.maxDate}
-              // Control properties
-              slideThreshold={this.props.slideThreshold}
-              // Transfer the corresponding styling properties.
-              dayHeaderView={this.props.dayHeaderView}
-              dayHeaderText={this.props.dayHeaderText}
-              dayRowView={this.props.dayRowView}
-              dayView={this.props.dayView}
-              daySelectedView={this.props.daySelectedView}
-              dayText={this.props.dayText}
-              dayTodayText={this.props.dayTodayText}
-              daySelectedText={this.props.daySelectedText}
-              dayDisabledText={this.props.dayDisabledText}
+              <DaySelector
+                focus={this.state.focus}
+                selected={this.props.selected}
+                onFocus={this._changeFocus}
+                onChange={(date) => this.props.onChange && this.props.onChange(date)}
+                monthOffset={this.state.monthOffset}
+                minDate={this.props.minDate}
+                maxDate={this.props.maxDate}
+                // Control properties
+                slideThreshold={this.props.slideThreshold}
+                // Transfer the corresponding styling properties.
+                dayHeaderView={this.props.dayHeaderView}
+                dayHeaderText={this.props.dayHeaderText}
+                dayRowView={this.props.dayRowView}
+                dayView={this.props.dayView}
+                daySelectedView={this.props.daySelectedView}
+                dayText={this.props.dayText}
+                dayTodayText={this.props.dayTodayText}
+                daySelectedText={this.props.daySelectedText}
+                dayDisabledText={this.props.dayDisabledText}
               /> :
-            this.state.stage === MONTH_SELECTOR ?
-            <MonthSelector
-              focus={this.state.focus}
-              selected={this.props.selected}
-              onFocus={this._changeFocus}
-              minDate={this.props.minDate}
-              maxDate={this.props.maxDate}
-              // Styling properties
-              monthText={this.props.monthText}
-              monthDisabledText={this.props.monthDisabledText}
-              selectedText={this.props.monthSelectedText}
-              /> :
-            this.state.stage === YEAR_SELECTOR ?
-            <YearSelector
-              focus={this.state.focus}
-              onFocus={this._changeFocus}
-              minDate={this.props.minDate}
-              maxDate={this.props.maxDate}
-              // Styling properties
-              minimumTrackTintColor={this.props.yearMinTintColor}
-              maximumTrackTintColor={this.props.yearMaxTintColor}
-              yearSlider={this.props.yearSlider}
-              yearText={this.props.yearText}
-              /> :
-            null
+              this.state.stage === MONTH_SELECTOR ?
+                <MonthSelector
+                  focus={this.state.focus}
+                  selected={this.props.selected}
+                  onFocus={this._changeFocus}
+                  minDate={this.props.minDate}
+                  maxDate={this.props.maxDate}
+                  // Styling properties
+                  monthText={this.props.monthText}
+                  monthDisabledText={this.props.monthDisabledText}
+                  selectedText={this.props.monthSelectedText}
+                /> :
+                this.state.stage === YEAR_SELECTOR ?
+                  <YearSelector
+                    focus={this.state.focus}
+                    onFocus={this._changeFocus}
+                    minDate={this.props.minDate}
+                    maxDate={this.props.maxDate}
+                    // Styling properties
+                    minimumTrackTintColor={this.props.yearMinTintColor}
+                    maximumTrackTintColor={this.props.yearMaxTintColor}
+                    yearSlider={this.props.yearSlider}
+                    yearText={this.props.yearText}
+                    yearflatlistText={this.props.yearflatlistText}
+                    is_landscape={this.props.is_landscape}
+                  /> :
+                  null
           }
         </View>
       </View>
@@ -252,6 +276,7 @@ Calendar.defaultProps = {
   startStage: DAY_SELECTOR,
   finalStage: DAY_SELECTOR,
   showArrows: true,
+
 };
 
 const styles = StyleSheet.create({
@@ -268,6 +293,107 @@ const styles = StyleSheet.create({
   },
   stageWrapper: {
     padding: 5,
-    overflow: 'hidden',
+    overflow: 'hidden'
   },
+  customeHeader: {
+    // flex: 1,
+    height: 80,
+    alignContent: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#389EFF'
+  },
+  padcustomeHeader: {
+    // flex: 1,
+    height: 140,
+    alignContent: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#389EFF'
+  },
+  landscapecustomeHeader: {
+    // flex: 1,
+    height: 60,
+    alignContent: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#389EFF'
+  },
+  padlandscapecustomeHeader: {
+    // flex: 1,
+    height: 120,
+    alignContent: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#389EFF'
+  },
+  headeryearText: {
+    fontSize: 14, //12
+    color: '#fff',
+    alignSelf: 'flex-start',
+    fontWeight: '300', //700
+    fontFamily: 'Montserrat-Light',
+    margin: 3,
+    marginLeft: 8,
+  },
+  padheaderyearText: {
+    fontSize: 29, //12
+    color: '#fff',
+    alignSelf: 'flex-start',
+    fontWeight: '300', //700
+    fontFamily: 'Montserrat-Light',
+    margin: 3,
+    marginLeft: 18,
+  },
+  landscapeheaderyearText: {
+    fontSize: 10, //12
+    color: '#fff',
+    alignSelf: 'flex-start',
+    fontWeight: '300', //700
+    fontFamily: 'Montserrat-Light',
+    margin: 3,
+    marginLeft: 8,
+  },
+  padlandscapeheaderyearText: {
+    fontSize: 22, //12
+    color: '#fff',
+    alignSelf: 'flex-start',
+    fontWeight: '300', //700
+    fontFamily: 'Montserrat-Light',
+    margin: 3,
+    marginLeft: 8,
+  },
+  headermonthText: {
+    fontSize: 24, //18
+    color: '#fff',
+    alignSelf: 'flex-start',
+    fontWeight: '300',
+    margin: 3,
+    marginLeft: 8,
+    fontFamily: 'Montserrat-Light',
+  },
+  padheadermonthText: {
+    fontSize: 39, //18
+    color: '#fff',
+    alignSelf: 'flex-start',
+    fontWeight: '300',
+    margin: 3,
+    marginLeft: 18,
+    marginBottom: 8,
+    fontFamily: 'Montserrat-Light',
+  },
+  landscapeheadermonthText: {
+    fontSize: 18, //18
+    color: '#fff',
+    alignSelf: 'flex-start',
+    fontWeight: '300',
+    margin: 3,
+    marginLeft: 8,
+    fontFamily: 'Montserrat-Light',
+  },
+  padlandscapeheadermonthText: {
+    fontSize: 30, //18
+    color: '#fff',
+    alignSelf: 'flex-start',
+    fontWeight: '300',
+    margin: 3,
+    marginLeft: 8,
+    fontFamily: 'Montserrat-Light',
+  }
 });
